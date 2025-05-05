@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mood Tracker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+  <style>
+    :root {
+      --bg-color: #0f0f13;
+      --card-color: #1a1a24;
+      --accent: #00d1b2;
+      --text: #f0f0f0;
+      --secondary: #b0b0b0;
+      --happy: #4CAF50;
+      --sad: #2196F3;
+      --angry: #F44336;
+      --focused: #9C27B0;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg-color);
+      color: var(--text);
+      padding: 1rem;
+      min-height: 100vh;
+      opacity: 0;
+      animation: fadeIn 1s forwards;
+      touch-action: manipulation;
+    }
+    
+    @keyframes fadeIn {
+      to { opacity: 1; }
+    }
+    
+    .container {
+      max-width: 100%;
+      margin: 0 auto;
+      padding-bottom: 1rem;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      transform: translateY(-20px);
+      opacity: 0;
+      animation: slideDown 0.8s forwards 0.3s;
+    }
+    
+    @keyframes slideDown {
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    h1 {
+      color: var(--accent);
+      font-size: clamp(1.8rem, 6vw, 2.5rem);
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+      background: linear-gradient(90deg, var(--accent), #00e0c0);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .subtitle {
+      color: var(--secondary);
+      font-weight: 300;
+      font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+    }
+    
+    .card {
+      background: var(--card-color);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      transition: all 0.3s ease;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    
+    .card.animated {
+      animation: cardAppear 0.6s forwards;
+    }
+    
+    @keyframes cardAppear {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    h2 {
+      color: var(--accent);
+      font-size: clamp(1.1rem, 4vw, 1.3rem);
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+    
+    .mood-buttons {
+      display: flex;
+      gap: 0.7rem;
+      justify-content: center;
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeIn 0.8s forwards 0.5s;
+    }
+    
+    .mood-btn {
+      color: #111;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: clamp(0.8rem, 3.5vw, 0.95rem);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+      flex: 1 1 40%;
+      max-width: 45%;
+      text-align: center;
+    }
+    
+    .mood-btn.happy { background: var(--happy); }
+    .mood-btn.sad { background: var(--sad); }
+    .mood-btn.angry { background: var(--angry); }
+    .mood-btn.focused { background: var(--focused); }
+    
+    .chart-container {
+      position: relative;
+      height: 200px;
+      width: 100%;
+    }
+    
+    #spotify-container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      position: relative;
+      padding-bottom: 30%;
+      height: 0;
+      overflow: hidden;
+      border-radius: 12px;
+      margin-top: 0.5rem;
+      background: rgba(255,255,255,0.05);
+    }
+    
+    #spotify-embed {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    
+    .now-playing {
+      margin-top: 0.8rem;
+      padding: 1rem;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      text-align: center;
+      opacity: 0;
+      transform: translateX(-10px);
+      transition: all 0.3s ease;
+    }
+    
+    .now-playing.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    
+    .mood-message {
+      font-size: clamp(0.9rem, 3.5vw, 1.1rem);
+      margin-bottom: 0.5rem;
+      color: var(--accent);
+    }
+    
+    .playlist-info {
+      font-size: clamp(0.8rem, 3vw, 0.95rem);
+      color: var(--text);
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.5rem;
+      font-size: clamp(0.75rem, 3vw, 0.85rem);
+    }
+    
+    th, td {
+      padding: 0.7rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    th {
+      color: var(--accent);
+      font-weight: 500;
+      font-size: clamp(0.7rem, 3vw, 0.75rem);
+    }
+    
+    .open-spotify {
+      display: inline-block;
+      margin: 0.8rem auto 0;
+      padding: 0.5rem 1rem;
+      background: #1DB954;
+      color: white;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .open-spotify:hover {
+      background: #1ed760;
+      transform: translateY(-2px);
+    }
+    
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+      
+      .mood-buttons {
+        gap: 0.5rem;
+      }
+      
+      .mood-btn {
+        padding: 0.6rem 0.8rem;
+        flex: 1 1 45%;
+      }
+      
+      .chart-container {
+        height: 180px;
+      }
+      
+      #spotify-container {
+        width: 80%;
+        max-width: none;
+        padding-bottom: 120%;
+      }
+      
+      .now-playing {
+        width: 80%;
+        max-width: none;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .card {
+        padding: 1rem;
+      }
+      
+      .chart-container {
+        height: 160px;
+      }
+      
+      #spotify-container {
+        width: 90%;
+      }
+      
+      .now-playing {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Mood Tracker</h1>
+      <p class="subtitle">Track your emotions & discover matching music</p>
+    </header>
+    
+    <div class="mood-buttons">
+      <button class="mood-btn happy" onclick="logMood('Happy')">😊 Happy</button>
+      <button class="mood-btn sad" onclick="logMood('Sad')">😢 Sad</button>
+      <button class="mood-btn angry" onclick="logMood('Angry')">😠 Angry</button>
+      <button class="mood-btn focused" onclick="logMood('Focused')">🧠 Focused</button>
+    </div>
+    
+    <div class="grid">
+      <div class="card animated" style="animation-delay: 0.2s">
+        <h2>Mood Timeline</h2>
+        <div class="chart-container">
+          <canvas id="moodChart"></canvas>
+        </div>
+      </div>
+      <div class="card animated" style="animation-delay: 0.4s">
+        <h2>Mood Distribution</h2>
+        <div class="chart-container">
+          <canvas id="pieChart"></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card animated" style="animation-delay: 0.6s">
+      <h2>Current Playlist</h2>
+      <div id="now-playing" class="now-playing">
+        <p>Select a mood to start playing music</p>
+      </div>
+      <div id="spotify-container">
+        <div id="spotify-embed"></div>
+        <a href="#" id="open-spotify" class="open-spotify" target="_blank">Open in Spotify</a>
+      </div>
+    </div>
+    
+    <div class="card animated" style="animation-delay: 0.8s">
+      <h2>Recent Mood Logs</h2>
+      <table id="mood-log">
+        <thead>
+          <tr><th>Time</th><th>Mood</th><th>Playlist</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const moodConfig = {
+      'Happy': {
+        playlist: '4Fh0313D3PitYzICKHhZ7r?si=9f6202275f5d435b',
+        color: '#4CAF50',
+        emoji: '😊',
+        spotifyUrl: 'spotify:playlist:4Fh0313D3PitYzICKHhZ7r?si=9f6202275f5d435b',
+        message: "You're happy! Here's some uplifting tunes to keep the good vibes going 🎶"
+      },
+      'Sad': {
+        playlist: '6yES0bJLnNTT0q6HfTuzu4?si=19b61cfa8e0b4251',
+        color: '#2196F3',
+        emoji: '😢',
+        spotifyUrl: 'spotify:playlist:6yES0bJLnNTT0q6HfTuzu4?si=19b61cfa8e0b4251',
+        message: "Feeling down? These soothing tracks might help lift your spirits 🌧️➡️🌈"
+      },
+      'Angry': {
+        playlist: '7LMbUSSaSMLl9RItWjoxEl',
+        color: '#F44336',
+        emoji: '😠',
+        spotifyUrl: 'spotify:playlist:7LMbUSSaSMLl9RItWjoxEl',
+        message: "You're feeling angry! Here's a playlist to help cool your mind and bring you back to calm 🌿🎧"
+      },
+      'Focused': {
+        playlist: '0oPyDVNdgcPFAWmOYSK7O1?si=2358cfe66ec14e17',
+        color: '#9C27B0',
+        emoji: '🧠',
+        spotifyUrl: 'spotify:playlist:0oPyDVNdgcPFAWmOYSK7O1?si=2358cfe66ec14e17',
+        message: "Need to concentrate? This focus-enhancing playlist will help you stay in the zone 🎯"
+      }
+    };
+    
+    const moodCounts = Object.keys(moodConfig).reduce((acc, mood) => {
+      acc[mood] = 0;
+      return acc;
+    }, {});
+    
+    let moodChart, pieChart;
+    
+    function initCharts() {
+      moodChart = new Chart(
+        document.getElementById('moodChart'),
+        {
+          type: 'line',
+          data: {
+            labels: [],
+            datasets: [{
+              label: 'Mood Trend',
+              data: [],
+              borderColor: '#00d1b2',
+              backgroundColor: 'rgba(0, 209, 178, 0.1)',
+              borderWidth: 2,
+              pointBackgroundColor: '#00d1b2',
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              tension: 0.2,
+              fill: true
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                ticks: {
+                  callback: function(value) {
+                    return Object.keys(moodConfig)[value] || '';
+                  },
+                  stepSize: 1
+                }
+              }
+            },
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+  callbacks: {
+    label: function(context) {
+      const moodKeys = Object.keys(moodConfig);
+      const moodIndex = context.raw;
+      return moodKeys[moodIndex] || '';
+    }
+  }
+}
+
+                  }
+                }
+              }
+      );
+      pieChart = new Chart(
+        document.getElementById('pieChart'),
+        {
+          type: 'pie',
+          data: {
+            labels: Object.keys(moodConfig),
+            datasets: [{
+              data: Array(Object.keys(moodConfig).length).fill(0),
+              backgroundColor: Object.values(moodConfig).map(m => m.color),
+              borderWidth: 0
+            }]
+          },
+          plugins: [ChartDataLabels],
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'right',
+                labels: {
+                  color: '#f0f0f0',
+                  font: { family: 'Poppins' },
+                  padding: 15,
+                  usePointStyle: true
+                }
+              },
+              datalabels: {
+                formatter: (value, ctx) => {
+                  const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+                  return percentage > 0 ? `${percentage}%` : '';
+                },
+                color: '#fff',
+                font: {
+                  weight: 'bold',
+                  size: 12
+                },
+                anchor: 'center',
+                align: 'center',
+                offset: 0,
+                clip: false
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const label = context.label || '';
+                    const value = context.raw || 0;
+                    return `${label}: ${value}`;
+                  }
+                }
+              }
+            }
+          }
+        }
+      );
+    }
+    
+    async function logMood(mood) {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      
+      anime({
+        targets: `.mood-btn.${mood.toLowerCase()}`,
+        scale: [1, 0.9, 1],
+        duration: 300,
+        easing: 'easeInOutQuad'
+      });
+      
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${timeString}</td>
+        <td>${moodConfig[mood].emoji} ${mood}</td>
+        <td>${mood} Vibes</td>
+      `;
+      document.querySelector('#mood-log tbody').prepend(row);
+      
+      anime({
+        targets: row,
+        opacity: [0, 1],
+        translateX: [-10, 0],
+        duration: 400,
+        easing: 'easeOutExpo'
+      });
+      
+      const moodValue = Object.keys(moodConfig).indexOf(mood);
+      moodChart.data.labels.push(timeString);
+      moodChart.data.datasets[0].data.push(moodValue);
+      moodChart.update();
+      
+      moodCounts[mood]++;
+      pieChart.data.datasets[0].data = Object.values(moodCounts);
+      pieChart.update();
+      
+      playSpotifyPlaylist(mood);
+      
+      try {
+        await fetch('https://script.google.com/macros/s/AKfycbx6omXwa2Dt3IhEhzoKfHVgFNtzSl6syuMuKiF0kBXGrx-zrUDFpjj4RzOVTbAXweOm/exec', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            mood, 
+            timestamp: now.toISOString(),
+            playlist: moodConfig[mood].playlist 
+          }),
+          mode: 'no-cors'
+        });
+      } catch (err) {
+        console.error('Error logging mood:', err);
+      }
+    }
+    
+    function playSpotifyPlaylist(mood, initialLoad = false) {
+      const config = moodConfig[mood];
+      
+      const nowPlaying = document.getElementById('now-playing');
+      nowPlaying.innerHTML = `
+        <div class="mood-message">${config.message}</div>
+        <div class="playlist-info">Now playing: <strong>${mood} Vibes</strong></div>
+      `;
+      
+      if (!initialLoad) {
+        nowPlaying.classList.add('show');
+      }
+      
+      const embed = document.getElementById('spotify-embed');
+      embed.innerHTML = `
+        <iframe src="https://open.spotify.com/embed/playlist/${config.playlist}?utm_source=generator&theme=0"
+          width="100%" 
+          height="100%" 
+          frameborder="0" 
+          allowfullscreen="" 
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy">
+        </iframe>
+      `;
+      
+      const spotifyLink = document.getElementById('open-spotify');
+      spotifyLink.href = config.spotifyUrl;
+      
+      if (!initialLoad) {
+        anime({
+          targets: '#spotify-container',
+          scale: [0.98, 1],
+          duration: 500,
+          easing: 'easeOutElastic'
+        });
+      }
+    }
+    
+    async function loadInitialData() {
+      try {
+        const response = await fetch('https://script.google.com/macros/s/AKfycbx6omXwa2Dt3IhEhzoKfHVgFNtzSl6syuMuKiF0kBXGrx-zrUDFpjj4RzOVTbAXweOm/exec');
+        const logs = await response.json();
+        
+        let latestMood = null;
+        let latestTime = 0;
+        
+        logs.forEach(log => {
+          const time = new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const moodValue = Object.keys(moodConfig).indexOf(log.mood);
+          const timestamp = new Date(log.timestamp).getTime();
+          
+          moodChart.data.labels.push(time);
+          moodChart.data.datasets[0].data.push(moodValue);
+          moodCounts[log.mood]++;
+          
+          if (timestamp > latestTime) {
+            latestTime = timestamp;
+            latestMood = log.mood;
+          }
+          
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${time}</td>
+            <td>${moodConfig[log.mood].emoji} ${log.mood}</td>
+            <td>${log.mood} Vibes</td>
+          `;
+          document.querySelector('#mood-log tbody').appendChild(row);
+        });
+        
+        moodChart.update();
+        pieChart.data.datasets[0].data = Object.values(moodCounts);
+        pieChart.update();
+        
+        if (latestMood) {
+          playSpotifyPlaylist(latestMood, true);
+          document.getElementById('now-playing').classList.add('show');
+        }
+        
+        document.querySelectorAll('.card').forEach((card, index) => {
+          setTimeout(() => {
+            card.classList.add('animated');
+          }, index * 200);
+        });
+      } catch (err) {
+        console.error('Error loading data:', err);
+      }
+    }
+    
+    function startMoodUpdatesChecker() {
+      setInterval(async () => {
+        try {
+          const response = await fetch('https://script.google.com/macros/s/AKfycbx6omXwa2Dt3IhEhzoKfHVgFNtzSl6syuMuKiF0kBXGrx-zrUDFpjj4RzOVTbAXweOm/exec');
+          const logs = await response.json();
+          
+          const currentLogCount = document.querySelectorAll('#mood-log tbody tr').length;
+          
+          if (logs.length > currentLogCount) {
+            moodChart.data.labels = [];
+            moodChart.data.datasets[0].data = [];
+            document.querySelector('#mood-log tbody').innerHTML = '';
+            
+            Object.keys(moodCounts).forEach(mood => moodCounts[mood] = 0);
+            
+            await loadInitialData();
+          }
+        } catch (err) {
+          console.error('Error checking for mood updates:', err);
+        }
+      }, 5000);
+    }
+     
+    window.addEventListener('DOMContentLoaded', () => {
+      initCharts();
+      loadInitialData();
+      startMoodUpdatesChecker();
+      
+      anime({
+        targets: '.mood-btn',
+        opacity: [0, 1],
+        translateY: [10, 0],
+        delay: anime.stagger(100),
+        duration: 600,
+        easing: 'easeOutExpo'
+      });
+    });
+  </script>
+</body>
+</html>
