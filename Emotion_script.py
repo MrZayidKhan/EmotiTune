@@ -3,89 +3,105 @@ from deepface import DeepFace
 import time
 import requests
 import json
+import numpy as np
+import threading
 
-# Script URL
-GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx6omXwa2Dt3IhEhzoKfHVgFNtzSl6syuMuKiF0kBXGrx-zrUDFpjj4RzOVTbAXweOm/exec"
+# Your script URL
+GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxjmJhOXgAUTjOJb3ruRGXcc_v6mrP5iQ1uYiZggU8cstWpbM5CZNj_tDY4G6QuT85U/exec"
 
-# webcam
+# Webcam settings
 cap = cv2.VideoCapture(0)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)  # Medium resolution
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-# Timing
+# State variables
 last_log_time = 0
-log_interval = 10 
-confidence_threshold = 0.75  
+log_interval = 10
+confidence_threshold = 0.60
+last_analysis = {"dominant_emotion": "Detecting...", "dominant_confidence": 0}
+analysis_lock = threading.Lock()
+next_analysis_time = 0
 
-def send_to_google_sheets(emotion, confidence):
-   
-    if emotion.lower() == "neutral":
-        print(f"Skipping Neutral emotion ({confidence:.0%})")
-        return
-        
-    payload = {
-        "mood": emotion,
-        "confidence": confidence,  # Send raw confidence value (0.0-1.0)
-        "confidence_percentage": f"{confidence:.0%}"  # Also send formatted percentage
-    }
-    
+# Background analyzer
+def background_analyze(frame_snapshot):
+    global last_analysis, last_log_time
+
+    analysis = get_emotion_analysis(frame_snapshot)
+    if analysis["face_detected"]:
+        with analysis_lock:
+            last_analysis = analysis
+
+        if (time.time() - last_log_time > log_interval and
+            analysis['dominant_confidence'] >= confidence_threshold and 
+            analysis['dominant_emotion'].lower() != 'neutral'):
+
+            send_to_google_sheets(analysis)
+            last_log_time = time.time()
+
+# Google Sheets logger
+def send_to_google_sheets(emotion_data):
     try:
-        response = requests.post(
-            GAS_WEB_APP_URL,
-            json=payload,
-            timeout=3
-        )
-        print(f"Logged: {emotion} ({confidence:.0%}) | Status: {response.status_code}")
+        payload = {"dominant_emotion": str(emotion_data["dominant_emotion"])}
+        headers = {"Content-Type": "application/json"}
+        response = requests.post(GAS_WEB_APP_URL, json=payload, headers=headers, timeout=5)
+        print("Sent:", payload, "| Status:", response.status_code)
+        return response.status_code == 200
     except Exception as e:
-        print(f"Upload failed: {str(e)}")
+        print("Send error:", str(e))
+        return False
 
-def get_dominant_emotion(frame):
-    """Get emotion with highest confidence score"""
+# Emotion detector
+def get_emotion_analysis(frame):
     try:
         result = DeepFace.analyze(
             frame,
             actions=['emotion'],
             enforce_detection=False,
-            detector_backend='opencv',
-            silent=True  # Reduce console output
+            detector_backend='opencv',  # Changed to lightweight backend
+            silent=True
         )
         emotions = result[0]['emotion']
-        dominant = max(emotions.items(), key=lambda x: x[1])
-        return dominant[0], dominant[1]/100
+        dominant_emotion = max(emotions.items(), key=lambda x: x[1])
+        return {
+            'dominant_emotion': dominant_emotion[0],
+            'dominant_confidence': dominant_emotion[1] / 100,
+            'face_detected': True
+        }
     except Exception as e:
-        print(f"Detection error: {str(e)}")
-        return None, 0
+        print("Detection failed:", str(e))
+        return {
+            'dominant_emotion': 'unknown',
+            'dominant_confidence': 0,
+            'face_detected': False
+        }
 
 # Main loop
 try:
     while True:
         ret, frame = cap.read()
         if not ret:
-            print("Failed to grab frame")
             break
 
         current_time = time.time()
-        
-        # Analyze frame
-        emotion, confidence = get_dominant_emotion(frame)
-        if emotion:
-            # Display emotion on frame
-            cv2.putText(frame, f"{emotion} ({confidence:.0%})", (20, 40),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-            
-            # Log periodically if above confidence threshold
-            if (current_time - last_log_time > log_interval and 
-                confidence >= confidence_threshold):
-                send_to_google_sheets(emotion, confidence)
-                last_log_time = current_time
-        
-        # Show frame
-        cv2.imshow("Emotion Detection", frame)
-        
-        # Exit on 'q' key
+
+        # Run analysis every 3–5 seconds max
+        if current_time >= next_analysis_time:
+            snapshot = frame.copy()
+            threading.Thread(target=background_analyze, args=(snapshot,), daemon=True).start()
+            next_analysis_time = current_time + 3  # Analyze every 3s
+
+        # Draw the emotion overlay
+        with analysis_lock:
+            emotion_text = f"{last_analysis['dominant_emotion']} ({last_analysis['dominant_confidence']:.0%})"
+
+        cv2.putText(frame, emotion_text, (20, 40),
+                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+        cv2.imshow("Mood Detector", frame)
+
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+
 finally:
-    # Ensure resources are released
     cap.release()
     cv2.destroyAllWindows()

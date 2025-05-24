@@ -6,7 +6,6 @@
   <title>Emotion Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
   <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
   <style>
     :root {
@@ -122,7 +121,7 @@
       font-weight: 600;
     }
     
-    .confidence {
+    .last-updated {
       color: var(--secondary);
       font-size: clamp(0.9rem, 3.5vw, 1.1rem);
     }
@@ -177,86 +176,9 @@
       box-shadow: 0 5px 15px rgba(0, 209, 178, 0.3);
     }
     
-    #spotify-player {
-      margin-top: 1.5rem;
-      background: rgba(255,255,255,0.05);
-      padding: 1rem;
-      border-radius: 8px;
-      transition: all 0.3s ease;
-      display: none;
-    }
-    
-    .spotify-buttons {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 0.5rem;
-    }
-    
-    .spotify-btn {
-      flex: 1;
-      padding: 0.5rem;
-      border-radius: 6px;
-      border: none;
-      font-weight: 500;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      transition: all 0.2s ease;
-    }
-    
-    .spotify-btn.web {
-      background: #1DB954;
-      color: white;
-    }
-    
-    .spotify-btn.app {
-      background: rgba(255,255,255,0.1);
-      color: var(--text);
-    }
-    
-    .spotify-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
-    
-    .now-playing {
-      margin-bottom: 1rem;
-      padding: 0.75rem;
-      background: rgba(0,0,0,0.2);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-    
-    .now-playing-cover {
-      width: 50px;
-      height: 50px;
-      border-radius: 4px;
-      background: #333;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .now-playing-info {
-      flex: 1;
-    }
-    
-    .now-playing-title {
-      font-weight: 500;
-      margin-bottom: 0.2rem;
-    }
-    
-    .now-playing-artist {
-      font-size: 0.8rem;
-      color: var(--secondary);
-    }
-    
     @media (max-width: 768px) {
       .grid {
+        display: grid;
         grid-template-columns: 1fr;
         gap: 1rem;
       }
@@ -266,13 +188,11 @@
       }
     }
     
-    @media (max-width: 480px) {
-      .card {
-        padding: 1rem;
-      }
-      
-      .chart-container {
-        height: 160px;
+    @media (min-width: 769px) {
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
       }
     }
   </style>
@@ -290,33 +210,9 @@
         <div class="emotion-display" id="current-emoji">😐</div>
         <div>
           <div class="emotion-text mood-neutral" id="current-emotion">Neutral</div>
-          <div class="confidence" id="confidence">Loading...</div>
+          <div class="last-updated" id="last-updated">Loading...</div>
         </div>
       </div>
-      
-      <div id="spotify-player">
-        <h3>Recommended Playlist</h3>
-        <div class="now-playing">
-          <div class="now-playing-cover">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="#1DB954">
-              <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.521 17.4c-.2.3-.6.4-1 .4-.2 0-.3 0-.5-.1-1.4-.8-3-1.3-4.6-1.4-1.6.1-3.2.5-4.6 1.4-.4.2-.9.2-1.2-.1-.3-.3-.4-.7-.2-1.1.2-.4.7-.6 1.1-.4 1.1.6 2.3 1 3.6 1.1-2.4-1.6-4-4.2-4-7.1 0-4.6 3.6-8.4 8.2-8.4 4.6 0 8.2 3.8 8.2 8.4 0 2.9-1.6 5.5-4 7.1 1.3-.1 2.5-.5 3.6-1.1.4-.2.9 0 1.1.4.3.4.2.8-.1 1.1z"></path>
-            </svg>
-          </div>
-          <div class="now-playing-info">
-            <div class="now-playing-title" id="now-playing-title">No song playing</div>
-            <div class="now-playing-artist" id="now-playing-artist">Spotify</div>
-          </div>
-        </div>
-        <div class="spotify-buttons">
-          <button class="spotify-btn app" id="open-app">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.521 17.4c-.2.3-.6.4-1 .4-.2 0-.3 0-.5-.1-1.4-.8-3-1.3-4.6-1.4-1.6.1-3.2.5-4.6 1.4-.4.2-.9.2-1.2-.1-.3-.3-.4-.7-.2-1.1.2-.4.7-.6 1.1-.4 1.1.6 2.3 1 3.6 1.1-2.4-1.6-4-4.2-4-7.1 0-4.6 3.6-8.4 8.2-8.4 4.6 0 8.2 3.8 8.2 8.4 0 2.9-1.6 5.5-4 7.1 1.3-.1 2.5-.5 3.6-1.1.4-.2.9 0 1.1.4.3.4.2.8-.1 1.1z"></path>
-            </svg>
-            Open in Spotify
-          </button>
-        </div>
-      </div>
-      
       <button class="refresh-btn" id="refresh-btn">Refresh Data</button>
     </div>
     
@@ -339,7 +235,7 @@
       <h2>Recent Emotions</h2>
       <table id="mood-log">
         <thead>
-          <tr><th>Time</th><th>Emotion</th><th>Confidence</th></tr>
+          <tr><th>Time</th><th>Emotion</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -347,229 +243,95 @@
   </div>
 
   <script>
-    // Configuration
+    // Emotion configuration
     const emotionConfig = {
-      'neutral': {
-        emoji: '😐',
-        color: '#9E9E9E',
-        playlist: '37i9dQZF1DX4sWSpwq3LiO',
-        name: 'Calming Instrumentals'
-      },
-      'happy': {
-        emoji: '😊',
-        color: '#4CAF50',
-        playlist: '37i9dQZF1DXdPec7aLTmlC',
-        name: 'Happy Vibes'
-      },
-      'sad': {
-        emoji: '😢',
-        color: '#2196F3',
-        playlist: '37i9dQZF1DX7qK8ma5wgG1',
-        name: 'Moody Tunes'
-      },
-      'angry': {
-        emoji: '😠',
-        color: '#F44336',
-        playlist: '37i9dQZF1DX4SBhb3fqCJd',
-        name: 'Rock Out'
-      }
-    };
+  happy: { emoji: '😊', color: '#4CAF50' },
+  sad: { emoji: '😢', color: '#2196F3' },
+  angry: { emoji: '😠', color: '#F44336' },
+  fear: { emoji: '😱', color: '#9C27B0' },
+  surprise: { emoji: '😲', color: '#FF9800' }
+};
 
     // Initialize variables
-    let emotionCounts = {};
-    let moodChart = null;
-    let pieChart = null;
+    let emotionCounts = Object.fromEntries(Object.keys(emotionConfig).map(e => [e, 0]));
+    let moodChart, pieChart;
     let emotionHistory = [];
-    let currentEmotion = null;
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbx6omXwa2Dt3IhEhzoKfHVgFNtzSl6syuMuKiF0kBXGrx-zrUDFpjj4RzOVTbAXweOm/exec";
-
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxjmJhOXgAUTjOJb3ruRGXcc_v6mrP5iQ1uYiZggU8cstWpbM5CZNj_tDY4G6QuT85U/exec";
     // Initialize charts
     function initCharts() {
       // Line chart for emotion timeline
-      moodChart = new Chart(
-        document.getElementById('moodChart'),
-        {
-          type: 'line',
-          data: {
-            labels: [],
-            datasets: [{
-              label: 'Emotion Trend',
-              data: [],
-              borderColor: '#00d1b2',
-              backgroundColor: 'rgba(0, 209, 178, 0.1)',
-              borderWidth: 2,
-              pointBackgroundColor: '#00d1b2',
-              pointRadius: 4,
-              pointHoverRadius: 6,
-              tension: 0.2,
-              fill: true
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              y: {
-                ticks: {
-                  callback: function(value) {
-                    const emotions = Object.keys(emotionConfig);
-                    return emotions[value] ? emotions[value].charAt(0).toUpperCase() + emotions[value].slice(1) : '';
-                  },
-                  stepSize: 1
-                }
-              }
-            },
-            plugins: {
-              legend: { display: false },
-              tooltip: {
-                callbacks: {
-                  label: function(context) {
-                    const emotions = Object.keys(emotionConfig);
-                    const moodIndex = context.raw;
-                    return emotions[moodIndex] ? emotions[moodIndex].charAt(0).toUpperCase() + emotions[moodIndex].slice(1) : '';
-                  }
-                }
+      moodChart = new Chart(document.getElementById('moodChart'), {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            data: [],
+            borderColor: '#00d1b2',
+            backgroundColor: 'rgba(0, 209, 178, 0.1)',
+            borderWidth: 2,
+            pointBackgroundColor: '#00d1b2',
+            tension: 0.2,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              ticks: {
+                callback: value => Object.keys(emotionConfig)[value]?.charAt(0).toUpperCase() + Object.keys(emotionConfig)[value]?.slice(1) || ''
               }
             }
-          }
+          },
+          plugins: { legend: { display: false } }
         }
-      );
+      });
       
       // Pie chart for emotion distribution
-      pieChart = new Chart(
-        document.getElementById('pieChart'),
-        {
-          type: 'pie',
-          data: {
-            labels: Object.keys(emotionConfig).map(e => e.charAt(0).toUpperCase() + e.slice(1)),
-            datasets: [{
-              data: Object.keys(emotionConfig).map(() => 0),
-              backgroundColor: Object.values(emotionConfig).map(m => m.color),
-              borderWidth: 0
-            }]
-          },
-          plugins: [ChartDataLabels],
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: 'right',
-                labels: {
-                  color: '#f0f0f0',
-                  font: { family: 'Poppins' },
-                  padding: 15,
-                  usePointStyle: true
-                }
-              },
-              datalabels: {
-                formatter: (value, ctx) => {
-                  const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                  const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-                  return percentage > 0 ? `${percentage}%` : '';
-                },
-                color: '#fff',
-                font: {
-                  weight: 'bold',
-                  size: 12
-                },
-                anchor: 'center',
-                align: 'center',
-                offset: 0,
-                clip: false
-              }
-            }
-          }
-        }
-      );
-      
-      // Initialize emotion counts
-      Object.keys(emotionConfig).forEach(emotion => {
-        emotionCounts[emotion] = 0;
-      });
+const pieChartCtx = document.getElementById('pieChart').getContext('2d');
+const pieChart = new Chart(pieChartCtx, {
+  type: 'pie',
+  data: {
+    labels: Object.keys(emotionConfig).map(e => e.charAt(0).toUpperCase() + e.slice(1)),
+    datasets: [{
+      data: Object.keys(emotionConfig).map(e => emotionCounts[e] || 0),
+      backgroundColor: Object.values(emotionConfig).map(m => m.color)
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { position: 'right' }
     }
-
-    // Update Spotify player
-    function updateSpotifyPlayer(emotion) {
-      const config = emotionConfig[emotion] || emotionConfig['neutral'];
-      const spotifyPlayer = document.getElementById('spotify-player');
-      
-      if (!config) {
-        spotifyPlayer.style.display = 'none';
-        return;
-      }
-
-      // Update now playing info
-      document.getElementById('now-playing-title').textContent = config.name;
-      document.getElementById('now-playing-artist').textContent = "Based on your mood";
-      
-      // Update app button to directly launch Spotify with the playlist
-      document.getElementById('open-app').onclick = () => {
-        // Try to launch Spotify app directly
-        window.location.href = `spotify:playlist:${config.playlist}`;
-        
-        // Fallback to web if app isn't installed (after a short delay)
-        setTimeout(() => {
-          window.open(`https://open.spotify.com/playlist/${config.playlist}`);
-        }, 300);
-      };
-      
-      // Show player with animation
-      spotifyPlayer.style.display = 'block';
-      anime({
-        targets: '#spotify-player',
-        opacity: [0, 1],
-        translateY: [10, 0],
-        duration: 500,
-        easing: 'easeOutExpo'
-      });
-    }
+  }
+});
+}
 
     // Update current emotion display
-    function updateCurrentEmotion(latestEntry) {
-      if (!latestEntry) return;
-      
-      const emotion = (latestEntry.mood || 'neutral').toLowerCase();
+    function updateCurrentEmotion(emotion) {
       const config = emotionConfig[emotion] || emotionConfig['neutral'];
-      const confidence = latestEntry.confidence || 0;
+      document.getElementById('current-emoji').textContent = config.emoji;
       
-      const emojiElement = document.getElementById('current-emoji');
       const emotionElement = document.getElementById('current-emotion');
-      const confidenceElement = document.getElementById('confidence');
+      emotionElement.textContent = emotion.charAt(0).toUpperCase() + emotion.slice(1);
+      emotionElement.className = `emotion-text mood-${emotion}`;
       
-      if (emojiElement) emojiElement.textContent = config.emoji;
-      if (emotionElement) {
-        emotionElement.textContent = emotion.charAt(0).toUpperCase() + emotion.slice(1);
-        emotionElement.className = 'emotion-text';
-        emotionElement.classList.add(`mood-${emotion}`);
-      }
-      if (confidenceElement) {
-        confidenceElement.textContent = `${Math.round(confidence * 100)}% confidence`;
-      }
-      
-      updateSpotifyPlayer(emotion);
+      document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
     }
 
     // Update log table
     function updateLogTable() {
       const tbody = document.querySelector('#mood-log tbody');
-      if (!tbody) return;
-      
       tbody.innerHTML = '';
       
-      // Show last 10 entries (newest first)
-      const recentEntries = [...emotionHistory].reverse().slice(0, 10);
-      
-      recentEntries.forEach(entry => {
-        const row = document.createElement('tr');
+      [...emotionHistory].reverse().slice(0, 10).forEach(entry => {
         const config = emotionConfig[entry.emotion] || emotionConfig['neutral'];
-        
+        const row = document.createElement('tr');
         row.innerHTML = `
           <td>${entry.time}</td>
-          <td class="mood-${entry.emotion}">
-            ${config.emoji} ${entry.emotion.charAt(0).toUpperCase() + entry.emotion.slice(1)}
-          </td>
-          <td>${Math.round((entry.confidence || 0) * 100)}%</td>
+          <td class="mood-${entry.emotion}">${config.emoji} ${entry.emotion.charAt(0).toUpperCase() + entry.emotion.slice(1)}</td>
         `;
         tbody.appendChild(row);
       });
@@ -577,14 +339,10 @@
 
     // Update charts
     function updateCharts() {
-      if (!moodChart || !pieChart) return;
-      
-      // Update line chart with last 20 entries
+      // Update line chart
       const recentHistory = emotionHistory.slice(-20);
       moodChart.data.labels = recentHistory.map(e => e.time);
-      moodChart.data.datasets[0].data = recentHistory.map(e => 
-        Object.keys(emotionConfig).indexOf(e.emotion)
-      );
+      moodChart.data.datasets[0].data = recentHistory.map(e => Object.keys(emotionConfig).indexOf(e.emotion));
       moodChart.update();
       
       // Update pie chart
@@ -594,10 +352,8 @@
 
     // Process data from Google Sheets
     function processData(data) {
-      if (!data || !Array.isArray(data) || data.length === 0) {
-        console.log('No data available');
-        document.getElementById('confidence').textContent = 'No data available';
-        document.getElementById('spotify-player').style.display = 'none';
+      if (!data?.length) {
+        document.getElementById('last-updated').textContent = 'No data available';
         return;
       }
 
@@ -605,110 +361,66 @@
       Object.keys(emotionCounts).forEach(e => emotionCounts[e] = 0);
       emotionHistory = [];
       
-      try {
-        // Process all entries
-        data.forEach(entry => {
-          if (!entry || !entry.mood) return;
-          
-          const emotion = entry.mood.toLowerCase();
-          if (emotionConfig[emotion]) {
-            emotionCounts[emotion]++;
-            
-            const time = new Date(entry.timestamp || Date.now());
-            const timeString = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
-            emotionHistory.push({
-              time: timeString,
-              emotion,
-              confidence: entry.confidence || 0
-            });
-          }
-        });
-
-        // Update visualizations
-        updateCharts();
-        updateLogTable();
-        
-        // Show latest emotion if available
-        if (emotionHistory.length > 0) {
-          updateCurrentEmotion(emotionHistory[emotionHistory.length - 1]);
+      data.forEach(entry => {
+        const emotion = entry.emotion?.toLowerCase();
+        if (emotionConfig[emotion]) {
+          emotionCounts[emotion]++;
+          emotionHistory.push({
+            time: new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            emotion
+          });
         }
-      } catch (err) {
-        console.error('Error processing data:', err);
-        document.getElementById('confidence').textContent = 'Error loading data';
+      });
+
+      updateCharts();
+      updateLogTable();
+      if (emotionHistory.length > 0) {
+        const latest = emotionHistory[emotionHistory.length - 1];
+        updateCurrentEmotion(latest.emotion);
       }
     }
 
     // Fetch data from Google Sheets
     async function fetchData() {
       try {
-        const refreshBtn = document.getElementById('refresh-btn');
-        if (refreshBtn) refreshBtn.disabled = true;
+        document.getElementById('refresh-btn').disabled = true;
         
         const response = await fetch(GAS_URL);
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
         const data = await response.json();
         processData(data);
         
       } catch (err) {
         console.error('Fetch error:', err);
-        const confidenceElement = document.getElementById('confidence');
-        if (confidenceElement) {
-          confidenceElement.textContent = 'Connection error';
-        }
+        document.getElementById('last-updated').textContent = 'Connection error';
       } finally {
-        const refreshBtn = document.getElementById('refresh-btn');
-        if (refreshBtn) refreshBtn.disabled = false;
+        document.getElementById('refresh-btn').disabled = false;
       }
     }
 
     // Initialize the app
     function initializeApp() {
-      try {
-        // Initialize charts first
-        initCharts();
-        
-        // Then fetch data
-        fetchData();
-        
-        // Set up refresh button
-        const refreshBtn = document.getElementById('refresh-btn');
-        if (refreshBtn) {
-          refreshBtn.addEventListener('click', () => {
-            anime({
-              targets: '#refresh-btn',
-              rotate: 360,
-              duration: 800,
-              easing: 'easeInOutSine',
-              complete: fetchData
-            });
-          });
-        }
-        
-        // Auto-refresh every 30 seconds
-        setInterval(fetchData, 30000);
-        
-        // Animate cards
-        document.querySelectorAll('.card').forEach((card, index) => {
-          setTimeout(() => {
-            card.classList.add('animated');
-          }, index * 200);
+      initCharts();
+      fetchData();
+      
+      document.getElementById('refresh-btn').addEventListener('click', () => {
+        anime({
+          targets: '#refresh-btn',
+          rotate: 360,
+          duration: 800,
+          complete: fetchData
         });
-        
-      } catch (err) {
-        console.error('Initialization error:', err);
-        const confidenceElement = document.getElementById('confidence');
-        if (confidenceElement) {
-          confidenceElement.textContent = 'App failed to load';
-        }
-      }
+      });
+      
+      // Refresh every 30 seconds
+      setInterval(fetchData, 30000);
+      
+      document.querySelectorAll('.card').forEach((card, i) => {
+        setTimeout(() => card.classList.add('animated'), i * 200);
+      });
     }
 
-    // Start the app when DOM is loaded
     document.addEventListener('DOMContentLoaded', initializeApp);
   </script>
 </body>
