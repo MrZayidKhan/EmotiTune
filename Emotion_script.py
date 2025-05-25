@@ -7,7 +7,7 @@ import numpy as np
 import threading
 
 # Your script URL
-GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxjmJhOXgAUTjOJb3ruRGXcc_v6mrP5iQ1uYiZggU8cstWpbM5CZNj_tDY4G6QuT85U/exec"
+GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzEs_amnDJTAVbbx5ntNNRx_QXv_DAO2bDU6QyOZpGV6ryDTnYL8lmu0Pl5kgbLp-T7/exec"
 
 # Webcam settings
 cap = cv2.VideoCapture(0)
