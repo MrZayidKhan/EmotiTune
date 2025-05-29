@@ -18,6 +18,8 @@
       --sad: #2196F3;
       --angry: #F44336;
       --neutral: #9E9E9E;
+      --fear: #9C27B0;
+      --surprise: #FF9800;
     }
     
     * {
@@ -136,6 +138,8 @@
     .mood-happy { color: var(--happy); }
     .mood-sad { color: var(--sad); }
     .mood-angry { color: var(--angry); }
+    .mood-fear { color: var(--fear); }
+    .mood-surprise { color: var(--surprise); }
     
     table {
       width: 100%;
@@ -176,6 +180,82 @@
       box-shadow: 0 5px 15px rgba(0, 209, 178, 0.3);
     }
     
+    /* Playlist Recommendation Card */
+    #playlist-recommendation {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 1rem;
+    }
+    
+    #playlist-embed-container {
+      width: 100%;
+      max-width: 400px;
+      height: 380px;
+      margin: 0 auto;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    #playlist-embed {
+      width: 100%;
+      height: 100%;
+      border: none;
+      border-radius: 12px;
+    }
+    
+    .playlist-info {
+      margin-top: 1rem;
+      text-align: center;
+    }
+    
+    #playlist-title {
+      font-size: 1.2rem;
+      margin-bottom: 0.3rem;
+    }
+    
+    #playlist-description {
+      color: var(--secondary);
+      font-size: 0.9rem;
+    }
+    
+    .no-playlist-message {
+      color: var(--secondary);
+      font-style: italic;
+      margin: 1rem 0;
+      text-align: center;
+    }
+    
+    .spotify-controls {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+      justify-content: center;
+    }
+    
+    .spotify-btn {
+      padding: 0.7rem 1.5rem;
+      background: #1DB954;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.95rem;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    }
+    
+    .spotify-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(29, 185, 84, 0.3);
+    }
+    
+    .spotify-btn.secondary {
+      background: #535353;
+    }
+    
     @media (max-width: 768px) {
       .grid {
         display: grid;
@@ -185,6 +265,15 @@
       
       .chart-container {
         height: 180px;
+      }
+      
+      #playlist-embed-container {
+        height: 300px;
+      }
+      
+      .spotify-controls {
+        flex-direction: column;
+        gap: 0.5rem;
       }
     }
     
@@ -216,14 +305,36 @@
       <button class="refresh-btn" id="refresh-btn">Refresh Data</button>
     </div>
     
+    <!-- Playlist Recommendation Card -->
+    <div class="card animated" style="animation-delay: 0.4s">
+      <h2>Recommended Playlist</h2>
+      <div id="playlist-recommendation">
+        <div id="playlist-embed-container">
+          <iframe id="playlist-embed" src="" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+        </div>
+        <div class="playlist-info">
+          <h3 id="playlist-title">Loading recommendation...</h3>
+          <p id="playlist-description">Based on your current mood</p>
+        </div>
+        <div class="spotify-controls">
+          <button class="spotify-btn" id="play-on-spotify">Play on Spotify</button>
+          <button class="spotify-btn secondary" id="open-in-spotify">Open in Spotify App</button>
+        </div>
+        <p id="no-playlist-message" class="no-playlist-message" style="display: none;">
+          No playlist recommendation for this emotion
+        </p>
+      </div>
+    </div>
+    
+    <!-- Charts -->
     <div class="grid">
-      <div class="card animated" style="animation-delay: 0.4s">
+      <div class="card animated" style="animation-delay: 0.6s">
         <h2>Emotion Timeline</h2>
         <div class="chart-container">
           <canvas id="moodChart"></canvas>
         </div>
       </div>
-      <div class="card animated" style="animation-delay: 0.6s">
+      <div class="card animated" style="animation-delay: 0.8s">
         <h2>Emotion Distribution</h2>
         <div class="chart-container">
           <canvas id="pieChart"></canvas>
@@ -231,7 +342,7 @@
       </div>
     </div>
     
-    <div class="card animated" style="animation-delay: 0.8s">
+    <div class="card animated" style="animation-delay: 1s">
       <h2>Recent Emotions</h2>
       <table id="mood-log">
         <thead>
@@ -243,20 +354,129 @@
   </div>
 
   <script>
-    // Emotion configuration
+    // Emotion configuration with playlist details
     const emotionConfig = {
-  happy: { emoji: '😊', color: '#4CAF50' },
-  sad: { emoji: '😢', color: '#2196F3' },
-  angry: { emoji: '😠', color: '#F44336' },
-  fear: { emoji: '😱', color: '#9C27B0' },
-  surprise: { emoji: '😲', color: '#FF9800' }
-};
+      happy: { 
+        emoji: '😊', 
+        color: '#4CAF50',
+        playlist: {
+          id: '21eb0FaWzIoUeZA7jopUn9?si=67e6227662184ccd', 
+          title: 'Happy Mood Playlist',
+          description: 'Upbeat tracks to boost your mood',
+          image: 'https://i.scdn.co/image/ab67706f00000002d72ef75e14ca6f60a1d2c814'
+        }
+      },
+      sad: { 
+        emoji: '😢', 
+        color: '#2196F3',
+        playlist: {
+          id: '6yES0bJLnNTT0q6HfTuzu4?si=edc93e74cddc4517', 
+          title: 'Melancholic Mood Playlist',
+          description: 'Soulful tracks for reflection',
+          image: 'https://i.scdn.co/image/ab67706f0000000213601f505986d31fb6a8972a'
+        }
+      },
+      angry: { 
+        emoji: '😠', 
+        color: '#F44336',
+        playlist: {
+          id: '7LMbUSSaSMLl9RItWjoxEl?si=d800eada174e4fed', 
+          title: 'Calming Instrumentals',
+          description: 'Melodies to cool you down',
+          image: 'https://i.scdn.co/image/ab67706f000000025a3b3c7dcc7b6b2e3d0e9e5e'
+        }
+      },
+      neutral: { 
+        emoji: '😐', 
+        color: '#9E9E9E',
+        playlist: {
+          id: '1ifKcmoSiW4ONbY5GXHEyt?si=b492af66ad8e4f07', 
+          title: 'Neutral Mood Playlist',
+          description: 'Balanced tracks for any mood',
+          image: 'https://i.scdn.co/image/ab67706f000000029249b35f23fb596b6f006a15'
+        }
+      },
+      fear: { 
+        emoji: '😱', 
+        color: '#9C27B0',
+        playlist: null
+      },
+      surprise: { 
+        emoji: '😲', 
+        color: '#FF9800',
+        playlist: null
+      }
+    };
 
     // Initialize variables
     let emotionCounts = Object.fromEntries(Object.keys(emotionConfig).map(e => [e, 0]));
     let moodChart, pieChart;
     let emotionHistory = [];
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbzEs_amnDJTAVbbx5ntNNRx_QXv_DAO2bDU6QyOZpGV6ryDTnYL8lmu0Pl5kgbLp-T7/exec";
+    const GAS_URL = "";
+    const PYTHON_API_URL = "";
+
+    // Update playlist recommendation based on emotion
+    function updatePlaylistRecommendation(emotion) {
+      const config = emotionConfig[emotion] || emotionConfig['neutral'];
+      const playlist = config.playlist;
+      const embed = document.getElementById('playlist-embed');
+      const noPlaylistMsg = document.getElementById('no-playlist-message');
+      
+      if (playlist) {
+        // Update Spotify embed
+        embed.src = `https://open.spotify.com/embed/playlist/${playlist.id.split('?')[0]}?utm_source=generator`;
+        embed.style.display = 'block';
+        
+        // Update playlist info
+        document.getElementById('playlist-title').textContent = playlist.title;
+        document.getElementById('playlist-description').textContent = playlist.description;
+        noPlaylistMsg.style.display = 'none';
+      } else {
+        // Hide embed and show message
+        embed.style.display = 'none';
+        document.getElementById('playlist-title').textContent = 'No Playlist Recommendation';
+        document.getElementById('playlist-description').textContent = `For ${emotion} mood`;
+        noPlaylistMsg.style.display = 'block';
+      }
+    }
+
+    // Play playlist on Spotify through Python backend
+    async function playOnSpotify() {
+      const currentEmotion = document.getElementById('current-emotion').textContent.toLowerCase();
+      
+      try {
+        const response = await fetch(`${PYTHON_API_URL}/play_playlist`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ emotion: currentEmotion })
+        });
+        
+        if (!response.ok) throw new Error('Failed to start playback');
+        
+        const result = await response.json();
+        console.log('Playback started:', result);
+        alert('Playback started on your active Spotify device!');
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error starting playback. Make sure you have Spotify open on a device.');
+      }
+    }
+
+    // Open playlist in Spotify app
+    function openInSpotifyApp() {
+      const currentEmotion = document.getElementById('current-emotion').textContent.toLowerCase();
+      const config = emotionConfig[currentEmotion] || emotionConfig['neutral'];
+      
+      if (config.playlist) {
+        const playlistId = config.playlist.id.split('?')[0];
+        window.open(`spotify:playlist:${playlistId}`, '_blank');
+      } else {
+        alert('No playlist available for this emotion');
+      }
+    }
+
     // Initialize charts
     function initCharts() {
       // Line chart for emotion timeline
@@ -289,25 +509,25 @@
       });
       
       // Pie chart for emotion distribution
-const pieChartCtx = document.getElementById('pieChart').getContext('2d');
- pieChart = new Chart(pieChartCtx, {
-  type: 'pie',
-  data: {
-    labels: Object.keys(emotionConfig).map(e => e.charAt(0).toUpperCase() + e.slice(1)),
-    datasets: [{
-      data: Object.keys(emotionConfig).map(e => emotionCounts[e] || 0),
-      backgroundColor: Object.values(emotionConfig).map(m => m.color)
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { position: 'right' }
+      const pieChartCtx = document.getElementById('pieChart').getContext('2d');
+      pieChart = new Chart(pieChartCtx, {
+        type: 'pie',
+        data: {
+          labels: Object.keys(emotionConfig).map(e => e.charAt(0).toUpperCase() + e.slice(1)),
+          datasets: [{
+            data: Object.keys(emotionConfig).map(e => emotionCounts[e] || 0),
+            backgroundColor: Object.values(emotionConfig).map(m => m.color)
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'right' }
+          }
+        }
+      });
     }
-  }
-});
-}
 
     // Update current emotion display
     function updateCurrentEmotion(emotion) {
@@ -319,6 +539,9 @@ const pieChartCtx = document.getElementById('pieChart').getContext('2d');
       emotionElement.className = `emotion-text mood-${emotion}`;
       
       document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+      
+      // Update the playlist recommendation
+      updatePlaylistRecommendation(emotion);
     }
 
     // Update log table
@@ -404,6 +627,7 @@ const pieChartCtx = document.getElementById('pieChart').getContext('2d');
       initCharts();
       fetchData();
       
+      // Refresh button
       document.getElementById('refresh-btn').addEventListener('click', () => {
         anime({
           targets: '#refresh-btn',
@@ -413,12 +637,20 @@ const pieChartCtx = document.getElementById('pieChart').getContext('2d');
         });
       });
       
-      // Refresh every 30 seconds
-      setInterval(fetchData, 10000);
+      // Spotify controls
+      document.getElementById('play-on-spotify').addEventListener('click', playOnSpotify);
+      document.getElementById('open-in-spotify').addEventListener('click', openInSpotifyApp);
       
+      // Refresh data every 30 seconds
+      setInterval(fetchData, 30000);
+      
+      // Animate cards
       document.querySelectorAll('.card').forEach((card, i) => {
         setTimeout(() => card.classList.add('animated'), i * 200);
       });
+      
+      // Initialize with neutral playlist
+      updatePlaylistRecommendation('neutral');
     }
 
     document.addEventListener('DOMContentLoaded', initializeApp);
