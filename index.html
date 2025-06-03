@@ -227,33 +227,13 @@
       text-align: center;
     }
     
-    .spotify-controls {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1rem;
-      justify-content: center;
-    }
-    
-    .spotify-btn {
-      padding: 0.7rem 1.5rem;
-      background: #1DB954;
-      color: white;
-      border: none;
+    .playlist-image {
+      width: 200px;
+      height: 200px;
+      object-fit: cover;
       border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-size: 0.95rem;
-      box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-    }
-    
-    .spotify-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(29, 185, 84, 0.3);
-    }
-    
-    .spotify-btn.secondary {
-      background: #535353;
+      margin: 0 auto;
+      display: block;
     }
     
     @media (max-width: 768px) {
@@ -271,9 +251,9 @@
         height: 300px;
       }
       
-      .spotify-controls {
-        flex-direction: column;
-        gap: 0.5rem;
+      .playlist-image {
+        width: 150px;
+        height: 150px;
       }
     }
     
@@ -310,15 +290,12 @@
       <h2>Recommended Playlist</h2>
       <div id="playlist-recommendation">
         <div id="playlist-embed-container">
-          <iframe id="playlist-embed" src="" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>
+          <img id="playlist-image" class="playlist-image" src="" alt="Playlist cover" style="display: none;">
+          <iframe id="playlist-embed" src="" frameborder="0" allowtransparency="true" allow="encrypted-media" style="display: none;"></iframe>
         </div>
         <div class="playlist-info">
           <h3 id="playlist-title">Loading recommendation...</h3>
           <p id="playlist-description">Based on your current mood</p>
-        </div>
-        <div class="spotify-controls">
-          <button class="spotify-btn" id="play-on-spotify">Play on Spotify</button>
-          <button class="spotify-btn secondary" id="open-in-spotify">Open in Spotify App</button>
         </div>
         <p id="no-playlist-message" class="no-playlist-message" style="display: none;">
           No playlist recommendation for this emotion
@@ -354,15 +331,15 @@
   </div>
 
   <script>
-    // Emotion configuration with playlist details
+    // Emotion config with playlist stuff
     const emotionConfig = {
       happy: { 
         emoji: '😊', 
         color: '#4CAF50',
         playlist: {
-          id: '21eb0FaWzIoUeZA7jopUn9?si=67e6227662184ccd', 
-          title: 'Happy Mood Playlist',
-          description: 'Upbeat tracks to boost your mood',
+          id: '5Ao3bBXmAkwGt5D3oxUUKK?si=de1b57d19a1d442a', 
+          title: 'Happy Hits',
+          description: 'Feel-good favorites!',
           image: 'https://i.scdn.co/image/ab67706f00000002d72ef75e14ca6f60a1d2c814'
         }
       },
@@ -370,9 +347,9 @@
         emoji: '😢', 
         color: '#2196F3',
         playlist: {
-          id: '6yES0bJLnNTT0q6HfTuzu4?si=edc93e74cddc4517', 
-          title: 'Melancholic Mood Playlist',
-          description: 'Soulful tracks for reflection',
+          id: '2evsoqz6SI3X68tUVrn7LM?si=72f48450657c446b', 
+          title: 'Sad Songs',
+          description: 'Beautiful songs to break your heart',
           image: 'https://i.scdn.co/image/ab67706f0000000213601f505986d31fb6a8972a'
         }
       },
@@ -380,9 +357,9 @@
         emoji: '😠', 
         color: '#F44336',
         playlist: {
-          id: '7LMbUSSaSMLl9RItWjoxEl?si=d800eada174e4fed', 
-          title: 'Calming Instrumentals',
-          description: 'Melodies to cool you down',
+          id: '7LMbUSSaSMLl9RItWjoxEl?si=5df921d8c95e48b0', 
+          title: 'Having a bad day? We feel you.',
+          description: 'Here\'s some Calm vibes to cool you down.',
           image: 'https://i.scdn.co/image/ab67706f000000025a3b3c7dcc7b6b2e3d0e9e5e'
         }
       },
@@ -390,90 +367,61 @@
         emoji: '😐', 
         color: '#9E9E9E',
         playlist: {
-          id: '1ifKcmoSiW4ONbY5GXHEyt?si=b492af66ad8e4f07', 
-          title: 'Neutral Mood Playlist',
-          description: 'Balanced tracks for any mood',
+          id: '24bpsB9QScttfWQ2LCM7rX?si=ea8dc44277984713', 
+          title: 'Mood Booster',
+          description: 'Chill with this dose of feel-good songs',
           image: 'https://i.scdn.co/image/ab67706f000000029249b35f23fb596b6f006a15'
         }
       },
-      fear: { 
-        emoji: '😱', 
-        color: '#9C27B0',
-        playlist: null
-      },
-      surprise: { 
-        emoji: '😲', 
-        color: '#FF9800',
-        playlist: null
-      }
-    };
+       fear: { 
+  emoji: '😱', 
+  color: '#9C27B0',
+    title: 'No Playlist Available',
+    description: 'You can add a playlist for this emotion later.',
+},
+surprise: { 
+  emoji: '😲', 
+  color: '#FF9800',
+    title: 'No Playlist Available',
+    description: 'Surprise! But no songs yet.',
+}
+    }
+
 
     // Initialize variables
     let emotionCounts = Object.fromEntries(Object.keys(emotionConfig).map(e => [e, 0]));
     let moodChart, pieChart;
     let emotionHistory = [];
     const GAS_URL = "";
-    const PYTHON_API_URL = "";
 
     // Update playlist recommendation based on emotion
     function updatePlaylistRecommendation(emotion) {
       const config = emotionConfig[emotion] || emotionConfig['neutral'];
       const playlist = config.playlist;
       const embed = document.getElementById('playlist-embed');
+      const image = document.getElementById('playlist-image');
       const noPlaylistMsg = document.getElementById('no-playlist-message');
       
       if (playlist) {
         // Update Spotify embed
-        embed.src = `https://open.spotify.com/embed/playlist/${playlist.id.split('?')[0]}?utm_source=generator`;
+        embed.src = `https://open.spotify.com/embed/playlist/${playlist.id}`;
         embed.style.display = 'block';
+        image.style.display = 'none';
         
         // Update playlist info
         document.getElementById('playlist-title').textContent = playlist.title;
         document.getElementById('playlist-description').textContent = playlist.description;
+        
+        // Set playlist image (fallback if embed doesn't work)
+        image.src = playlist.image;
         noPlaylistMsg.style.display = 'none';
       } else {
         // Hide embed and show message
         embed.style.display = 'none';
+        image.style.display = 'none';
         document.getElementById('playlist-title').textContent = 'No Playlist Recommendation';
         document.getElementById('playlist-description').textContent = `For ${emotion} mood`;
         noPlaylistMsg.style.display = 'block';
-      }
-    }
-
-    // Play playlist on Spotify through Python backend
-    async function playOnSpotify() {
-      const currentEmotion = document.getElementById('current-emotion').textContent.toLowerCase();
-      
-      try {
-        const response = await fetch(`${PYTHON_API_URL}/play_playlist`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ emotion: currentEmotion })
-        });
-        
-        if (!response.ok) throw new Error('Failed to start playback');
-        
-        const result = await response.json();
-        console.log('Playback started:', result);
-        alert('Playback started on your active Spotify device!');
-      } catch (error) {
-        console.error('Error:', error);
-        alert('Error starting playback. Make sure you have Spotify open on a device.');
-      }
-    }
-
-    // Open playlist in Spotify app
-    function openInSpotifyApp() {
-      const currentEmotion = document.getElementById('current-emotion').textContent.toLowerCase();
-      const config = emotionConfig[currentEmotion] || emotionConfig['neutral'];
-      
-      if (config.playlist) {
-        const playlistId = config.playlist.id.split('?')[0];
-        window.open(`spotify:playlist:${playlistId}`, '_blank');
-      } else {
-        alert('No playlist available for this emotion');
       }
     }
 
@@ -637,12 +585,8 @@
         });
       });
       
-      // Spotify controls
-      document.getElementById('play-on-spotify').addEventListener('click', playOnSpotify);
-      document.getElementById('open-in-spotify').addEventListener('click', openInSpotifyApp);
-      
-      // Refresh data every 30 seconds
-      setInterval(fetchData, 30000);
+      // Refresh data every 5 seconds
+      setInterval(fetchData, 8000);
       
       // Animate cards
       document.querySelectorAll('.card').forEach((card, i) => {
